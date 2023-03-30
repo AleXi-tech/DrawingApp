@@ -89,12 +89,10 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         invalidate()
         return true
     }
-
     internal inner class CustomPath(
         var color: Int,
         var brushThickness: Float
     ) : Path()
-
     fun setSizeForBrush(size: Float) {
         mBrushSize = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
@@ -102,5 +100,12 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
             resources.displayMetrics
         )
         mDrawPaint!!.strokeWidth = mBrushSize
+    }
+    fun removeLastDraw(){
+        if (mPaths.isNotEmpty()) mPaths.removeLast()
+        invalidate()
+    }
+    fun changeColor(color: Int){
+        this.color = color
     }
 }

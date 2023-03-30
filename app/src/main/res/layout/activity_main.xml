@@ -24,8 +24,30 @@
         android:layout_height="50dp"
         android:scaleType="fitXY"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/ibChangeColor"
+        app:layout_constraintStart_toEndOf="@+id/ibRemoveLast"
+        />
+    <ImageButton
+        android:id="@+id/ibRemoveLast"
+        android:src="@drawable/baseline_skip_previous_24"
+        android:layout_margin="5dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:scaleType="fitXY"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/ibSelectBrushSize"
         app:layout_constraintStart_toStartOf="parent"
         />
+
+    <ImageButton
+        android:id="@+id/ibChangeColor"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_margin="5dp"
+        android:scaleType="fitXY"
+        android:src="@drawable/baseline_color_lens_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/ibSelectBrushSize" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
