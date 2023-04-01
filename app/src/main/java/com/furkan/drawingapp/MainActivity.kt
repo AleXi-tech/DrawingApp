@@ -1,98 +1,104 @@
 package com.furkan.drawingapp
 
 import android.app.Dialog
-import android.graphics.Color
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.ImageButton
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import com.furkan.drawingapp.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityMainBinding
     private var drawingView: DrawingView? = null
-
     private var ibSelectBrushSize: ImageButton? = null
-
     private var ibRemoveLast: ImageButton? = null
     private var ibChangeColor: ImageButton? = null
+    private var ibAddImage: ImageButton? = null
+
+    companion object {
+        private const val BRUSH_SIZE_SMALL = 4F
+        private const val BRUSH_SIZE_MEDIUM = 8F
+        private const val BRUSH_SIZE_LARGE = 16F
+        private const val COLOR_BLACK = R.color.black
+        private const val COLOR_BLUE = R.color.blue
+        private const val COLOR_RED = R.color.red
+        private const val COLOR_YELLOW = R.color.yellow
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        drawingView = findViewById(R.id.drawingView)
-        ibSelectBrushSize = findViewById(R.id.ibSelectBrushSize)
-        ibRemoveLast = findViewById(R.id.ibRemoveLast)
-        ibChangeColor = findViewById(R.id.ibChangeColor)
+        drawingView = binding.drawingView
+        ibSelectBrushSize = binding.ibSelectBrushSize
+        ibRemoveLast = binding.ibRemoveLast
+        ibChangeColor = binding.ibChangeColor
+        ibAddImage = binding.ibAddImage
 
-        drawingView?.setSizeForBrush(2F)
+        drawingView?.setSizeForBrush(BRUSH_SIZE_SMALL)
 
         ibSelectBrushSize?.setOnClickListener {
             showBrushSizeChooserDialog()
         }
-
         ibRemoveLast?.setOnClickListener {
             removeLastDraw()
         }
-
         ibChangeColor?.setOnClickListener {
             showColorChooserDialog()
         }
-
-
     }
 
     private fun showColorChooserDialog() {
         val colorDialog = Dialog(this)
         colorDialog.setContentView(R.layout.dialog_choose_color)
-        colorDialog.setTitle("Brush Size : ")
+        colorDialog.setTitle("Color : ")
+
         val colorBlackButton = colorDialog.findViewById<ImageButton>(R.id.ibColorBlack)
         val colorBlueButton = colorDialog.findViewById<ImageButton>(R.id.ibColorBlue)
         val colorRedButton = colorDialog.findViewById<ImageButton>(R.id.ibColorRed)
         val colorYellowButton = colorDialog.findViewById<ImageButton>(R.id.ibColorYellow)
 
-        colorBlackButton.setOnClickListener {
-            drawingView?.changeColor(Color.BLACK)
-            colorDialog.dismiss()
-        }
-        colorBlueButton.setOnClickListener {
-            drawingView?.changeColor(Color.BLUE)
-            colorDialog.dismiss()
-        }
-        colorRedButton.setOnClickListener {
-            drawingView?.changeColor(Color.RED)
-            colorDialog.dismiss()
-        }
-        colorYellowButton.setOnClickListener {
-            drawingView?.changeColor(Color.YELLOW)
-            colorDialog.dismiss()
+        val colorButtons = listOf(
+            colorBlackButton to COLOR_BLACK,
+            colorBlueButton to COLOR_BLUE,
+            colorRedButton to COLOR_RED,
+            colorYellowButton to COLOR_YELLOW
+        )
+        colorButtons.forEach { (button, color) ->
+            button.setOnClickListener {
+                drawingView?.changeColor(ContextCompat.getColor(this, color))
+                ibChangeColor?.setColorFilter(ContextCompat.getColor(this, color))
+                colorDialog.dismiss()
+            }
         }
         colorDialog.show()
-    }
-
-    private fun removeLastDraw() {
-        drawingView?.removeLastDraw()
     }
 
     private fun showBrushSizeChooserDialog() {
         val brushDialog = Dialog(this)
         brushDialog.setContentView(R.layout.dialog_brush_size)
-        brushDialog.setTitle("Color : ")
+        brushDialog.setTitle("Brush Size : ")
         val smallButton = brushDialog.findViewById<ImageButton>(R.id.ibSmallBrush)
         val mediumButton = brushDialog.findViewById<ImageButton>(R.id.ibMediumBrush)
         val largeButton = brushDialog.findViewById<ImageButton>(R.id.ibLargeBrush)
 
-        smallButton.setOnClickListener {
-            drawingView?.setSizeForBrush(4F)
-            brushDialog.dismiss()
-        }
-        mediumButton.setOnClickListener {
-            drawingView?.setSizeForBrush(8F)
-            brushDialog.dismiss()
-        }
-        largeButton.setOnClickListener {
-            drawingView?.setSizeForBrush(16F)
-            brushDialog.dismiss()
+        val brushButtons = listOf(
+            smallButton to BRUSH_SIZE_SMALL,
+            mediumButton to BRUSH_SIZE_MEDIUM,
+            largeButton to BRUSH_SIZE_LARGE
+        )
+        brushButtons.forEach { (button, brushSize) ->
+            button.setOnClickListener {
+                drawingView?.setSizeForBrush(brushSize)
+                brushDialog.dismiss()
+            }
         }
         brushDialog.show()
+    }
+
+    private fun removeLastDraw() {
+        drawingView?.removeLastDraw()
     }
 }
