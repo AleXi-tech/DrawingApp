@@ -2,11 +2,16 @@ package com.furkan.drawingapp
 
 import android.app.Dialog
 import android.os.Bundle
-import android.view.View
+import android.Manifest
+import android.content.Intent
+import android.provider.MediaStore
 import android.widget.ImageButton
+import android.widget.ImageView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.furkan.drawingapp.databinding.ActivityMainBinding
 import com.google.android.material.snackbar.Snackbar
@@ -14,6 +19,7 @@ import com.google.android.material.snackbar.Snackbar
 class MainActivity : AppCompatActivity() {
 
     private lateinit var permissionsResultLauncher: ActivityResultLauncher<Array<String>>
+    private lateinit var openGalleryLauncher: ActivityResultLauncher<Intent>
 
     private lateinit var binding: ActivityMainBinding
     private var drawingView: DrawingView? = null
@@ -21,6 +27,7 @@ class MainActivity : AppCompatActivity() {
     private var ibRemoveLast: ImageButton? = null
     private var ibChangeColor: ImageButton? = null
     private var ibAddImage: ImageButton? = null
+    private var ivBackground: ImageView? = null
 
     companion object {
         private const val BRUSH_SIZE_SMALL = 4F
@@ -42,6 +49,7 @@ class MainActivity : AppCompatActivity() {
         ibRemoveLast = binding.ibRemoveLast
         ibChangeColor = binding.ibChangeColor
         ibAddImage = binding.ibAddImage
+        ivBackground = binding.ivBackground
 
         drawingView?.setSizeForBrush(BRUSH_SIZE_SMALL)
 
@@ -55,26 +63,50 @@ class MainActivity : AppCompatActivity() {
             showColorChooserDialog()
         }
         ibAddImage?.setOnClickListener {
-            permissionsResultLauncher.launch(arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE))
+            requestStoragePermission()
+
+        }
+    }
+
+    private fun requestStoragePermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(
+                this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            )
+        ) {
+            showRationaleDialog("Drawing App",
+                "Drawing App needs to access your external storage"+
+                        ", please allow app to access your external storage from settings")
+        }else{
+            permissionsResultLauncher.launch(
+                arrayOf(
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                )
+            )
         }
     }
 
     override fun onStart() {
         super.onStart()
+        openGalleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK && result.data != null) {
+                ivBackground?.setImageURI(result.data?.data)
+            }
+        }
         permissionsResultLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { permissions ->
             permissions.forEach { permission ->
+                val delimiter = if (permission.key.contains('_')) '_' else '.'
                 if (permission.value) {
-                    Snackbar.make(
-                        this, this.ibAddImage!!,
-                        "Permission for ${permission.key.substringAfterLast('_')} Granted",
-                        Snackbar.LENGTH_LONG
-                    ).show()
+                    val pickIntent = Intent(Intent.ACTION_PICK,
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                    openGalleryLauncher.launch(pickIntent)
                 } else {
                     Snackbar.make(
                         this, this.ibAddImage!!,
-                        "Permission for ${permission.key.substringAfterLast('_')} Denied",
+                        "Permission for ${permission.key.substringAfterLast(delimiter)} Denied."+
+                                "Please allow app to access storage to use this feature",
                         Snackbar.LENGTH_LONG
                     ).show()
                 }
@@ -134,5 +166,20 @@ class MainActivity : AppCompatActivity() {
         drawingView?.removeLastDraw()
     }
 
+    private fun showRationaleDialog(
+        title: String,
+        message: String
+    ) {
+        val builder = AlertDialog.Builder(this)
+        builder.run {
+            setTitle(title)
+            setMessage(message)
+            setPositiveButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            builder.create().show()
+        }
+
+    }
 
 }
