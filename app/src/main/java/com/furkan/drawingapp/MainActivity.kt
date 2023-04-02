@@ -2,12 +2,18 @@ package com.furkan.drawingapp
 
 import android.app.Dialog
 import android.os.Bundle
+import android.view.View
 import android.widget.ImageButton
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.furkan.drawingapp.databinding.ActivityMainBinding
+import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var permissionsResultLauncher: ActivityResultLauncher<Array<String>>
 
     private lateinit var binding: ActivityMainBinding
     private var drawingView: DrawingView? = null
@@ -47,6 +53,32 @@ class MainActivity : AppCompatActivity() {
         }
         ibChangeColor?.setOnClickListener {
             showColorChooserDialog()
+        }
+        ibAddImage?.setOnClickListener {
+            permissionsResultLauncher.launch(arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE))
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        permissionsResultLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            permissions.forEach { permission ->
+                if (permission.value) {
+                    Snackbar.make(
+                        this, this.ibAddImage!!,
+                        "Permission for ${permission.key.substringAfterLast('_')} Granted",
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                } else {
+                    Snackbar.make(
+                        this, this.ibAddImage!!,
+                        "Permission for ${permission.key.substringAfterLast('_')} Denied",
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                }
+            }
         }
     }
 
@@ -101,4 +133,6 @@ class MainActivity : AppCompatActivity() {
     private fun removeLastDraw() {
         drawingView?.removeLastDraw()
     }
+
+
 }
