@@ -1,9 +1,9 @@
 package com.furkan.drawingapp
 
-import android.app.Dialog
-import android.os.Bundle
 import android.Manifest
+import android.app.Dialog
 import android.content.Intent
+import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -74,10 +74,12 @@ class MainActivity : AppCompatActivity() {
                 Manifest.permission.READ_EXTERNAL_STORAGE
             )
         ) {
-            showRationaleDialog("Drawing App",
-                "Drawing App needs to access your external storage"+
-                        ", please allow app to access your external storage from settings")
-        }else{
+            showRationaleDialog(
+                "Drawing App",
+                "Drawing App needs to access your external storage" +
+                        ", please allow app to access your external storage from settings"
+            )
+        } else {
             permissionsResultLauncher.launch(
                 arrayOf(
                     Manifest.permission.READ_EXTERNAL_STORAGE
@@ -88,24 +90,27 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        openGalleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK && result.data != null) {
-                ivBackground?.setImageURI(result.data?.data)
+        openGalleryLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == RESULT_OK && result.data != null) {
+                    ivBackground?.setImageURI(result.data?.data)
+                }
             }
-        }
         permissionsResultLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { permissions ->
             permissions.forEach { permission ->
                 val delimiter = if (permission.key.contains('_')) '_' else '.'
                 if (permission.value) {
-                    val pickIntent = Intent(Intent.ACTION_PICK,
-                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                    val pickIntent = Intent(
+                        Intent.ACTION_PICK,
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                    )
                     openGalleryLauncher.launch(pickIntent)
                 } else {
                     Snackbar.make(
                         this, this.ibAddImage!!,
-                        "Permission for ${permission.key.substringAfterLast(delimiter)} Denied."+
+                        "Permission for ${permission.key.substringAfterLast(delimiter)} Denied." +
                                 "Please allow app to access storage to use this feature",
                         Snackbar.LENGTH_LONG
                     ).show()
