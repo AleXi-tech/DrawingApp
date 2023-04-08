@@ -7,6 +7,8 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.media.MediaScannerConnection
+import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.View
@@ -20,6 +22,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import com.furkan.drawingapp.databinding.ActivityMainBinding
 import com.google.android.material.snackbar.Snackbar
@@ -266,6 +269,7 @@ class MainActivity : AppCompatActivity() {
                                 "File successfully saved :$result",
                                 Toast.LENGTH_LONG
                             ).show()
+                            shareImage(FileProvider.getUriForFile(this@MainActivity,"com.furkan.drawingapp.fileprovider",f))
                         } else {
                             Toast.makeText(
                                 this@MainActivity,
@@ -283,16 +287,26 @@ class MainActivity : AppCompatActivity() {
         return result
     }
 
-    private fun showProgressDialog(){
+    private fun showProgressDialog() {
         customProgressDialog = Dialog(this@MainActivity)
         customProgressDialog?.setContentView(R.layout.dialog_custom_progress)
         customProgressDialog?.show()
     }
+
     private fun dismissCustomDialog() {
-        if (customProgressDialog != null){
+        if (customProgressDialog != null) {
             customProgressDialog?.dismiss()
         }
         customProgressDialog = null
+    }
+
+    private fun shareImage(uri: Uri) {
+        val shareIntent = Intent()
+        shareIntent.action = Intent.ACTION_SEND
+        shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
+        shareIntent.flags = Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+        shareIntent.type = "image/png"
+        startActivity(Intent.createChooser(shareIntent, "Share"))
     }
 
 }
