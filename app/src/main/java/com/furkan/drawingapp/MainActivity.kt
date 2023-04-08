@@ -3,18 +3,32 @@ package com.furkan.drawingapp
 import android.Manifest
 import android.app.Dialog
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
 import android.os.Bundle
 import android.provider.MediaStore
+import android.view.View
+import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.furkan.drawingapp.databinding.ActivityMainBinding
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 
 class MainActivity : AppCompatActivity() {
 
@@ -28,6 +42,8 @@ class MainActivity : AppCompatActivity() {
     private var ibChangeColor: ImageButton? = null
     private var ibAddImage: ImageButton? = null
     private var ivBackground: ImageView? = null
+    private var ibSave: ImageButton? = null
+    private var flDrawingViewContainer: FrameLayout? = null
 
     companion object {
         private const val BRUSH_SIZE_SMALL = 4F
@@ -50,6 +66,8 @@ class MainActivity : AppCompatActivity() {
         ibChangeColor = binding.ibChangeColor
         ibAddImage = binding.ibAddImage
         ivBackground = binding.ivBackground
+        ibSave = binding.ibSave
+        flDrawingViewContainer = binding.flDrawingViewContainer
 
         drawingView?.setSizeForBrush(BRUSH_SIZE_SMALL)
 
@@ -66,6 +84,27 @@ class MainActivity : AppCompatActivity() {
             requestStoragePermission()
 
         }
+        ibSave?.setOnClickListener {
+            if (isReadStorageAllowed()){
+                lifecycleScope.launch {
+                    saveBitmapFile(getBitmapFromView(flDrawingViewContainer!!))
+                }
+            }
+        }
+    }
+
+    private fun isReadStorageAllowed(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun isWriteStorageAllowed(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun requestStoragePermission() {
@@ -82,7 +121,8 @@ class MainActivity : AppCompatActivity() {
         } else {
             permissionsResultLauncher.launch(
                 arrayOf(
-                    Manifest.permission.READ_EXTERNAL_STORAGE
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
                 )
             )
         }
@@ -185,6 +225,66 @@ class MainActivity : AppCompatActivity() {
             builder.create().show()
         }
 
+    }
+
+    private fun getBitmapFromView(view: View): Bitmap {
+        val returnedBitmap = Bitmap.createBitmap(
+            view.width,
+            view.height,
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(returnedBitmap)
+        val bgDrawable = view.background
+        if (bgDrawable != null) {
+            bgDrawable.draw(canvas)
+        } else {
+            canvas.drawColor(Color.WHITE)
+        }
+        view.draw(canvas)
+        return returnedBitmap
+    }
+
+    private suspend fun saveBitmapFile(bitmap: Bitmap?): String {
+        var result = ""
+        withContext(Dispatchers.IO) {
+            if (bitmap != null) {
+                try {
+                    val bytes = ByteArrayOutputStream()
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 90, bytes)
+                    val f = File(
+                        externalCacheDir?.absoluteFile.toString() +
+                                File.separator +
+                                "DrawingApp_" +
+                                System.currentTimeMillis() / 1000 +
+                                ".png"
+                    )
+                    val fo = FileOutputStream(f)
+                    fo.write(bytes.toByteArray())
+                    fo.close()
+
+                    result = f.absolutePath
+                    runOnUiThread {
+                        if (result.isNotEmpty()) {
+                            Toast.makeText(
+                                this@MainActivity,
+                                "File successfully saved :$result",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        } else {
+                            Toast.makeText(
+                                this@MainActivity,
+                                "Empty file !",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                } catch (e: Exception) {
+                    result = ""
+                    e.printStackTrace()
+                }
+            }
+        }
+        return result
     }
 
 }

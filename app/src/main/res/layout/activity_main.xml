@@ -82,7 +82,17 @@
         android:scaleType="fitXY"
         android:src="@drawable/baseline_add_photo_alternate_24"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/ibSave"
         app:layout_constraintStart_toEndOf="@+id/ibChangeColor" />
+    <ImageButton
+        android:id="@+id/ibSave"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_margin="5dp"
+        android:scaleType="fitXY"
+        android:src="@drawable/baseline_save_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/ibAddImage" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
