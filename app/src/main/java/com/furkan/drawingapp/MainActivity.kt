@@ -7,7 +7,6 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -269,7 +268,13 @@ class MainActivity : AppCompatActivity() {
                                 "File successfully saved :$result",
                                 Toast.LENGTH_LONG
                             ).show()
-                            shareImage(FileProvider.getUriForFile(this@MainActivity,"com.furkan.drawingapp.fileprovider",f))
+                            shareImage(
+                                FileProvider.getUriForFile(
+                                    this@MainActivity,
+                                    "com.furkan.drawingapp.fileprovider",
+                                    f
+                                )
+                            )
                         } else {
                             Toast.makeText(
                                 this@MainActivity,
