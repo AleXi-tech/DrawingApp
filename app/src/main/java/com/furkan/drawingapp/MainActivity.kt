@@ -2,12 +2,11 @@ package com.furkan.drawingapp
 
 import android.Manifest
 import android.app.Dialog
+import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.View
@@ -24,6 +23,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import com.furkan.drawingapp.databinding.ActivityMainBinding
+import com.furkan.drawingapp.util.Commons
+import com.furkan.drawingapp.util.Constants
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -48,16 +49,6 @@ class MainActivity : AppCompatActivity() {
     private var ibSave: ImageButton? = null
     private var flDrawingViewContainer: FrameLayout? = null
 
-    companion object {
-        private const val BRUSH_SIZE_SMALL = 4F
-        private const val BRUSH_SIZE_MEDIUM = 8F
-        private const val BRUSH_SIZE_LARGE = 16F
-        private const val COLOR_BLACK = R.color.black
-        private const val COLOR_BLUE = R.color.blue
-        private const val COLOR_RED = R.color.red
-        private const val COLOR_YELLOW = R.color.yellow
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -72,7 +63,7 @@ class MainActivity : AppCompatActivity() {
         ibSave = binding.ibSave
         flDrawingViewContainer = binding.flDrawingViewContainer
 
-        drawingView?.setSizeForBrush(BRUSH_SIZE_SMALL)
+        drawingView?.setSizeForBrush(Constants.BRUSH_SIZE_SMALL)
 
         ibSelectBrushSize?.setOnClickListener {
             showBrushSizeChooserDialog()
@@ -88,8 +79,8 @@ class MainActivity : AppCompatActivity() {
 
         }
         ibSave?.setOnClickListener {
-            if (isReadStorageAllowed()) {
-                showProgressDialog()
+            if (Commons.isReadStorageAllowed(this)) {
+                showProgressDialog(this)
                 lifecycleScope.launch {
                     saveBitmapFile(getBitmapFromView(flDrawingViewContainer!!))
                 }
@@ -97,12 +88,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun isReadStorageAllowed(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.READ_EXTERNAL_STORAGE
-        ) == PackageManager.PERMISSION_GRANTED
-    }
 
     private fun requestStoragePermission() {
         if (ActivityCompat.shouldShowRequestPermissionRationale(
@@ -167,10 +152,10 @@ class MainActivity : AppCompatActivity() {
         val colorYellowButton = colorDialog.findViewById<ImageButton>(R.id.ibColorYellow)
 
         val colorButtons = listOf(
-            colorBlackButton to COLOR_BLACK,
-            colorBlueButton to COLOR_BLUE,
-            colorRedButton to COLOR_RED,
-            colorYellowButton to COLOR_YELLOW
+            colorBlackButton to Constants.COLOR_BLACK,
+            colorBlueButton to Constants.COLOR_BLUE,
+            colorRedButton to Constants.COLOR_RED,
+            colorYellowButton to Constants.COLOR_YELLOW
         )
         colorButtons.forEach { (button, color) ->
             button.setOnClickListener {
@@ -191,9 +176,9 @@ class MainActivity : AppCompatActivity() {
         val largeButton = brushDialog.findViewById<ImageButton>(R.id.ibLargeBrush)
 
         val brushButtons = listOf(
-            smallButton to BRUSH_SIZE_SMALL,
-            mediumButton to BRUSH_SIZE_MEDIUM,
-            largeButton to BRUSH_SIZE_LARGE
+            smallButton to Constants.BRUSH_SIZE_SMALL,
+            mediumButton to Constants.BRUSH_SIZE_MEDIUM,
+            largeButton to Constants.BRUSH_SIZE_LARGE
         )
         brushButtons.forEach { (button, brushSize) ->
             button.setOnClickListener {
@@ -268,13 +253,15 @@ class MainActivity : AppCompatActivity() {
                                 "File successfully saved :$result",
                                 Toast.LENGTH_LONG
                             ).show()
-                            shareImage(
+                            Commons.shareImage(
                                 FileProvider.getUriForFile(
                                     this@MainActivity,
                                     "com.furkan.drawingapp.fileprovider",
                                     f
                                 )
-                            )
+                            ) {
+                                startActivity(it)
+                            }
                         } else {
                             Toast.makeText(
                                 this@MainActivity,
@@ -292,8 +279,8 @@ class MainActivity : AppCompatActivity() {
         return result
     }
 
-    private fun showProgressDialog() {
-        customProgressDialog = Dialog(this@MainActivity)
+    private fun showProgressDialog(context: Context) {
+        customProgressDialog = Dialog(context)
         customProgressDialog?.setContentView(R.layout.dialog_custom_progress)
         customProgressDialog?.show()
     }
@@ -305,13 +292,5 @@ class MainActivity : AppCompatActivity() {
         customProgressDialog = null
     }
 
-    private fun shareImage(uri: Uri) {
-        val shareIntent = Intent()
-        shareIntent.action = Intent.ACTION_SEND
-        shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
-        shareIntent.flags = Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
-        shareIntent.type = "image/png"
-        startActivity(Intent.createChooser(shareIntent, "Share"))
-    }
 
 }
